@@ -39,6 +39,7 @@
 , libGL
 # experimental and can cause crashes in inspector
 , vulkanSupport ? false
+, shaderc
 , vulkan-loader
 , vulkan-headers
 , wayland
@@ -109,6 +110,8 @@ stdenv.mkDerivation rec {
     libxml2 # for xmllint
   ] ++ lib.optionals waylandSupport [
     wayland-scanner
+  ] ++ lib.optionals vulkanSupport [
+    shaderc # for glslc
   ] ++ setupHooks;
 
   buildInputs = [
