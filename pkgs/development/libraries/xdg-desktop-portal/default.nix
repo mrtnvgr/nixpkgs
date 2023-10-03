@@ -1,6 +1,4 @@
 { lib
-, acl
-, dbus
 , fetchFromGitHub
 , flatpak
 , fuse3
@@ -77,8 +75,6 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   buildInputs = [
-    acl
-    dbus
     flatpak
     fuse3
     bubblewrap
