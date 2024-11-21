@@ -2,16 +2,19 @@
   stdenvNoCC,
   fetchFromGitLab,
   lib,
+  full ? true,
+  # see https://gitlab.com/jschx/ufetch for a list
+  osName ? "nixos",
 }:
 
-stdenvNoCC.mkDerivation rec {
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "ufetch";
   version = "0.3";
 
   src = fetchFromGitLab {
     owner = "jschx";
     repo = "ufetch";
-    rev = "v${version}";
+    rev = "v${finalAttrs.version}";
     hash = "sha256-1LtVCJrkdI2AUdF5d/OBCoSqjlbZI810cxtcuOs/YWs=";
   };
 
@@ -19,7 +22,17 @@ stdenvNoCC.mkDerivation rec {
 
   installPhase = ''
     runHook preInstall
-    install -Dm755 ufetch-nixos $out/bin/ufetch
+    mkdir -p $out/bin $out/share/licenses/${finalAttrs.pname}
+    ${
+      if !full then
+        "install -Dm755 ufetch-${osName} $out/bin/ufetch"
+      else
+        ''
+          install -Dm755 ufetch-* $out/bin
+          ln -s $out/bin/ufetch-${osName} $out/bin/ufetch
+        ''
+    }
+    install -Dm644 LICENSE $out/share/licenses/${finalAttrs.pname}/LICENSE
     runHook postInstall
   '';
 
@@ -31,4 +44,4 @@ stdenvNoCC.mkDerivation rec {
     mainProgram = "ufetch";
     maintainers = with lib.maintainers; [ mrtnvgr ];
   };
-}
+})

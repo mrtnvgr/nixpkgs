@@ -1,25 +1,20 @@
-From 095ff1b79b1a8082dae3659a3d7ab456a1d9e525 Mon Sep 17 00:00:00 2001
-From: mrtnvgr <root@unixis.fun>
-Date: Fri, 15 Dec 2023 20:45:26 +0700
-Subject: [PATCH] optimize packages command
-
----
- ufetch-nixos | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
 diff --git a/ufetch-nixos b/ufetch-nixos
-index 2ca8f9d..be9ad32 100755
+index 2ca8f9d..5102cd7 100755
 --- a/ufetch-nixos
 +++ b/ufetch-nixos
-@@ -9,7 +9,7 @@ host="$(hostname)"
+@@ -9,9 +9,14 @@ host="$(hostname)"
  os="$(nixos-version)"
  kernel="$(uname -sr)"
  uptime="$(uptime | awk -F, '{sub(".*up ",x,$1);print $1}' | sed -e 's/^[ \t]*//')"
 -packages="$(ls -d -1 /nix/store/*/ | wc -l)"
-+packages="$(find /nix/store/ -maxdepth 1 -type d | wc -l)"
  shell="$(basename "${SHELL}")"
 
++for profile in $NIX_PROFILES; do
++	if [ -d "$profile" ]; then
++		packages="$((packages + $( (nix-store -q --requisites "$profile" 2>/dev/null || printf '') | wc -l)))"
++	fi
++done
++
  ## UI DETECTION
---
-2.42.0
 
+ parse_rcs() {
