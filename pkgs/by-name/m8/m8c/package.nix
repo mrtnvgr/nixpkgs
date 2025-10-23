@@ -1,6 +1,7 @@
 {
   stdenv,
   fetchFromGitHub,
+  nix-update-script,
   lib,
   pkg-config,
   SDL2,
@@ -28,6 +29,8 @@ stdenv.mkDerivation (finalAttrs: {
     SDL2
     libserialport
   ];
+
+  passthru.updateScript = nix-update-script { };
 
   meta = {
     description = "Cross-platform M8 tracker headless client";
