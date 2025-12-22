@@ -1,0 +1,107 @@
+# An easy solution for using unmerged nixpkgs PR
+# Thanks @doronbehar! <3
+# Related links:
+# - https://discourse.nixos.org/t/github-actions-to-update-your-nixpkgs-fork-with-prs-patches/72832
+# - https://github.com/doronbehar/nixpkgs/blob/channel/fork-master/.github/workflows/update-personal-stable.yml
+
+name: Auto-patch nixos-unstable with PRs
+
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  # List of PR URLs to apply (one per line)
+  PR_URLS: |
+    https://github.com/NixOS/nixpkgs/pull/467114
+    https://github.com/NixOS/nixpkgs/pull/470158
+    https://github.com/NixOS/nixpkgs/pull/468672
+    https://github.com/NixOS/nixpkgs/pull/468448
+    https://github.com/NixOS/nixpkgs/pull/463653
+    https://github.com/NixOS/nixpkgs/pull/463428
+    https://github.com/NixOS/nixpkgs/pull/462475
+    https://github.com/NixOS/nixpkgs/pull/462464
+    https://github.com/NixOS/nixpkgs/pull/462243
+    https://github.com/NixOS/nixpkgs/pull/462236
+    https://github.com/NixOS/nixpkgs/pull/461897
+    https://github.com/NixOS/nixpkgs/pull/461894
+    https://github.com/NixOS/nixpkgs/pull/461853
+    https://github.com/NixOS/nixpkgs/pull/461837
+    https://github.com/NixOS/nixpkgs/pull/461829
+    https://github.com/NixOS/nixpkgs/pull/461472
+    https://github.com/NixOS/nixpkgs/pull/461467
+    https://github.com/NixOS/nixpkgs/pull/460283
+    https://github.com/NixOS/nixpkgs/pull/460273
+    https://github.com/NixOS/nixpkgs/pull/460260
+    https://github.com/NixOS/nixpkgs/pull/460099
+    # https://github.com/NixOS/nixpkgs/pull/457744
+
+permissions:
+  contents: write
+
+jobs:
+  update-and-patch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Restore Git cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .git
+          key: git-cache-${{ github.run_id }}
+          restore-keys: |
+            git-cache-
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream https://github.com/NixOS/nixpkgs.git || true
+          git fetch upstream nixos-unstable
+
+      - name: Update nixos-unstable branch in fork
+        run: |
+          git checkout -B channel/future upstream/nixos-unstable
+
+          git rm -r .github/workflows
+          git commit -m 'removed workflows to avoid some permission checks'
+
+      - name: Apply PR patches
+        run: |
+          failed_prs=()
+
+          echo '${{ env.PR_URLS }}' | while IFS= read pr_url; do
+            if ! curl -sL "${pr_url}.patch" | git am; then
+              echo "::error::Failed to apply $pr_url"
+              git am --abort
+              failed_prs+=("$pr_url")
+            else
+              echo "Successfully applied $pr_url"
+            fi
+          done
+
+          # Report failures at the end
+          if [ ${#failed_prs[@]} -gt 0 ]; then
+            echo "::error::The following PRs failed to apply:"
+            for failed_pr in "${failed_prs[@]}"; do
+              echo "::error::  - $failed_pr"
+            done
+            exit 1
+          fi
+      - name: Push patched branch
+        run: |
+          git push origin channel/future --force
+
+      - name: Save Git cache
+        uses: actions/cache/save@v4
+        with:
+          path: .git
+          key: git-cache-${{ github.run_id }}
