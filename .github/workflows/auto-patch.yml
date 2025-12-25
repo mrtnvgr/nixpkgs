@@ -32,6 +32,7 @@ env:
     https://github.com/NixOS/nixpkgs/pull/460273
     https://github.com/NixOS/nixpkgs/pull/460260
     https://github.com/NixOS/nixpkgs/pull/460099
+    https://github.com/NixOS/nixpkgs/pull/453899
 
 permissions:
   contents: write
