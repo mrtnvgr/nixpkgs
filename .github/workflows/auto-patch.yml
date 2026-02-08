@@ -17,11 +17,9 @@ env:
     https://github.com/NixOS/nixpkgs/pull/468448
     https://github.com/NixOS/nixpkgs/pull/463653
     https://github.com/NixOS/nixpkgs/pull/463428
-    https://github.com/NixOS/nixpkgs/pull/462475
     https://github.com/NixOS/nixpkgs/pull/462464
     https://github.com/NixOS/nixpkgs/pull/462243
     https://github.com/NixOS/nixpkgs/pull/462236
-    https://github.com/NixOS/nixpkgs/pull/461897
     https://github.com/NixOS/nixpkgs/pull/461894
     https://github.com/NixOS/nixpkgs/pull/461829
     https://github.com/NixOS/nixpkgs/pull/461472
